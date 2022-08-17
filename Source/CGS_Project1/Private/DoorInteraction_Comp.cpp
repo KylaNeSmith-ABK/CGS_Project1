@@ -23,10 +23,18 @@ void UDoorInteraction_Comp::BeginPlay()
 {
 	Super::BeginPlay();
 
-	StartRotation = GetOwner()->GetActorRotation();
-	FinalRotation = GetOwner()->GetActorRotation() + DesiredRotation;
+	Owner = GetOwner();
 
-	CurrentRotationTime = 0.0f;
+	if (Owner)
+	{
+		StartRotation = Owner->GetActorRotation();
+		FinalRotation = Owner->GetActorRotation() + DesiredRotation;
+
+		StartPosition = Owner->GetActorLocation();
+		FinalPosition = Owner->GetActorLocation() + DesiredOffset;
+	}
+
+	CurrentTime = 0.0f;
 
 }
 
@@ -36,18 +44,51 @@ void UDoorInteraction_Comp::TickComponent(float DeltaTime, ELevelTick TickType, 
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if ((CurrentRotationTime < TimeToRotate) && TriggerBox && GetWorld() && GetWorld()->GetFirstLocalPlayerFromController())
+	if (Owner)
 	{
-		APawn* PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
-		if (PlayerPawn && TriggerBox->IsOverlappingActor(PlayerPawn))
+		if (!bIsOpen && (CurrentTime < TimeToMove) && TriggerBox && GetWorld() && GetWorld()->GetFirstLocalPlayerFromController())
 		{
-			CurrentRotationTime += DeltaTime;
-			const float TimeRatio = FMath::Clamp(CurrentRotationTime / TimeToRotate, 0.0f, 1.0f);
-			const float RotationAlpha = OpenCurve.GetRichCurveConst()->Eval(TimeRatio);
-			const FRotator CurrentRotation = FMath::Lerp(StartRotation, FinalRotation, RotationAlpha);
-			GetOwner()->SetActorRotation(CurrentRotation);
+			APawn* PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
+			if (PlayerPawn && TriggerBox->IsOverlappingActor(PlayerPawn))
+			{
+				CurrentTime += DeltaTime;
+				const float TimeRatio = FMath::Clamp(CurrentTime / TimeToMove, 0.0f, 1.0f);
+				const float MovementAlpha = OpenCurve.GetRichCurveConst()->Eval(TimeRatio);
+
+				switch (OpenStyle)
+				{
+					case EDoorOpenStyle::ROTATE:
+					{
+						const FRotator CurrentRotation = FMath::Lerp(StartRotation, FinalRotation, MovementAlpha);
+						GetOwner()->SetActorRotation(CurrentRotation);
+
+						bIsOpen = CurrentRotation.Equals(FinalRotation, 1.0f);
+
+						if (bIsOpen)
+						{
+							UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::TickComponent - Door rotated open"));
+						}
+
+						break;
+					}
+					case EDoorOpenStyle::SLIDE:
+					{
+						const FVector CurrentPosition = FMath::Lerp(StartPosition, FinalPosition, MovementAlpha);
+						GetOwner()->SetActorLocation(CurrentPosition);
+
+						bIsOpen = CurrentPosition.Equals(FinalPosition, 1.0f);
+
+						if (bIsOpen)
+						{
+							UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::TickComponent - Door slid open"));
+						}
+
+						break;
+					}
+				}
+			}
 		}
 	}
-
+	
 }
 

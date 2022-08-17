@@ -9,6 +9,13 @@
 
 class ATriggerBox;
 
+UENUM()
+enum class EDoorOpenStyle
+{
+	ROTATE,
+	SLIDE
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CGS_PROJECT1_API UDoorInteraction_Comp : public UActorComponent
 {
@@ -18,26 +25,40 @@ public:
 	// Sets default values for this component's properties
 	UDoorInteraction_Comp();
 
+private:
+	AActor* Owner = nullptr;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere)
+	EDoorOpenStyle OpenStyle = EDoorOpenStyle::ROTATE;
+
+	UPROPERTY(EditAnywhere, meta=(EditCondition="OpenStyle==EDoorOpenStyle::ROTATE"))
 	FRotator DesiredRotation = FRotator::ZeroRotator;
+
+	UPROPERTY(EditAnywhere, meta=(EditCondition="OpenStyle==EDoorOpenStyle::SLIDE"))
+	FVector DesiredOffset = FVector::ZeroVector;
 
 	FRotator StartRotation = FRotator::ZeroRotator;
 	FRotator FinalRotation = FRotator::ZeroRotator;
 
+	FVector StartPosition = FVector::ZeroVector;
+	FVector FinalPosition = FVector::ZeroVector;
+
 	UPROPERTY(EditAnywhere)
-	float TimeToRotate = 1.0f;
+	float TimeToMove = 1.0f;
 	
-	float CurrentRotationTime = 0.0f;
+	float CurrentTime = 0.0f;
 
 	UPROPERTY(EditAnywhere)
 	ATriggerBox* TriggerBox = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	FRuntimeFloatCurve OpenCurve;
+
+	bool bIsOpen = false;
 
 public:	
 	// Called every frame
