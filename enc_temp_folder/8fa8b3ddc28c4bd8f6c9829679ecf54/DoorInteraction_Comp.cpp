@@ -51,11 +51,6 @@ void UDoorInteraction_Comp::TickComponent(float DeltaTime, ELevelTick TickType, 
 		{
 			APawn* PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
 
-			if (KeyTrigger && KeyTrigger->IsOverlappingActor(PlayerPawn))
-			{
-				bIsLocked = false;
-			}
-
 			if (!bIsLocked && PlayerPawn && TriggerBox && (CurrentTime < TimeToMove) && TriggerBox->IsOverlappingActor(PlayerPawn))
 			{
 				CurrentTime += DeltaTime;

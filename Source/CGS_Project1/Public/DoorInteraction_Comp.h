@@ -41,6 +41,9 @@ protected:
 	UPROPERTY(EditAnywhere, meta=(EditCondition="OpenStyle==EDoorOpenStyle::SLIDE"))
 	FVector DesiredOffset = FVector::ZeroVector;
 
+	UPROPERTY(EditAnywhere)
+	bool bUsesKey = false;
+
 	FRotator StartRotation = FRotator::ZeroRotator;
 	FRotator FinalRotation = FRotator::ZeroRotator;
 
@@ -55,10 +58,15 @@ protected:
 	UPROPERTY(EditAnywhere)
 	ATriggerBox* TriggerBox = nullptr;
 
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "bUsesKey"))
+	ATriggerBox* KeyTrigger = nullptr;
+
 	UPROPERTY(EditAnywhere)
 	FRuntimeFloatCurve OpenCurve;
 
 	bool bIsOpen = false;
+
+	bool bIsLocked = false;
 
 public:	
 	// Called every frame
