@@ -8,6 +8,7 @@
 #include "DoorInteraction_Comp.generated.h"
 
 class ATriggerBox;
+class AStaticMeshActor;
 
 UENUM()
 enum class EDoorOpenStyle
@@ -60,6 +61,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "bUsesKey"))
 	ATriggerBox* KeyTrigger = nullptr;
+
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "bUsesKey"))
+	AStaticMeshActor* KeyMesh = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	FRuntimeFloatCurve OpenCurve;

@@ -3,6 +3,7 @@
 
 #include "DoorInteraction_Comp.h"
 #include "GameFramework/Actor.h"
+#include "Engine/StaticMeshActor.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/TriggerBox.h"
 #include "Engine/World.h"
@@ -54,6 +55,12 @@ void UDoorInteraction_Comp::TickComponent(float DeltaTime, ELevelTick TickType, 
 			if (KeyTrigger && KeyTrigger->IsOverlappingActor(PlayerPawn))
 			{
 				bIsLocked = false;
+				KeyTrigger->Destroy();
+
+				if (KeyMesh)
+				{
+					KeyMesh->Destroy();
+				}
 			}
 
 			if (!bIsLocked && PlayerPawn && TriggerBox && (CurrentTime < TimeToMove) && TriggerBox->IsOverlappingActor(PlayerPawn))
