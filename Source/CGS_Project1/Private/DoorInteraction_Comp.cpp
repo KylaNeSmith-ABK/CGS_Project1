@@ -34,11 +34,12 @@ void UDoorInteraction_Comp::TriggerBoxEntered(UPrimitiveComponent* OverlappedCom
 				if (FVector::DotProduct(FrameMesh->GetActorRightVector(), PlayerPawn->GetActorForwardVector()) >= 0)
 				{
 					UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::TriggerBoxEntered - Player is facing door forward"));
-					FinalRotation *= -1;
+					FinalRotation = -1 * (Owner->GetActorRotation() + DesiredRotation);
 				}
 				else
 				{
 					UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::TriggerBoxEntered - Player is not facing doorforward"));
+					FinalRotation = Owner->GetActorRotation() + DesiredRotation;
 				}
 			}
 			

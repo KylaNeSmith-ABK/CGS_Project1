@@ -23,7 +23,7 @@ UDoorInteraction_Comp::UDoorInteraction_Comp()
 
 void UDoorInteraction_Comp::TriggerBoxEntered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (GetWorld() && GetWorld()->GetFirstLocalPlayerFromController())
+	if ((DoorState == EDoorState::CLOSED) && GetWorld() && GetWorld()->GetFirstLocalPlayerFromController())
 	{
 		APawn* PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
 
@@ -76,42 +76,42 @@ void UDoorInteraction_Comp::OpeningDoor(float DeltaTime)
 
 		switch (OpenStyle)
 		{
-		case EDoorOpenStyle::ROTATE:
-		{
-			const FRotator CurrentRotation = FMath::Lerp(StartRotation, FinalRotation, MovementAlpha);
-			GetOwner()->SetActorRotation(CurrentRotation);
-
-			if (CurrentRotation.Equals(FinalRotation, 1.0f))
+			case EDoorOpenStyle::ROTATE:
 			{
-				DoorState = EDoorState::OPEN;
-				CurrentTime = 0.0f;
-			}
+				const FRotator CurrentRotation = FMath::Lerp(StartRotation, FinalRotation, MovementAlpha);
+				GetOwner()->SetActorRotation(CurrentRotation);
 
-			if (DoorState == EDoorState::OPEN)
+				if (CurrentRotation.Equals(FinalRotation, 1.0f))
+				{
+					DoorState = EDoorState::OPEN;
+					CurrentTime = 0.0f;
+				}
+
+				if (DoorState == EDoorState::OPEN)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::OpeningDoor - Door rotated open"));
+				}
+
+				break;
+			}
+			case EDoorOpenStyle::SLIDE:
 			{
-				UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::OpeningDoor - Door rotated open"));
+				const FVector CurrentPosition = FMath::Lerp(StartPosition, FinalPosition, MovementAlpha);
+				GetOwner()->SetActorLocation(CurrentPosition);
+
+				if (CurrentPosition.Equals(FinalPosition, 1.0f))
+				{
+					DoorState = EDoorState::OPEN;
+					CurrentTime = 0.0f;
+				}
+
+				if (DoorState == EDoorState::OPEN)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::OpeningDoor - Door slid open"));
+				}
+
+				break;
 			}
-
-			break;
-		}
-		case EDoorOpenStyle::SLIDE:
-		{
-			const FVector CurrentPosition = FMath::Lerp(StartPosition, FinalPosition, MovementAlpha);
-			GetOwner()->SetActorLocation(CurrentPosition);
-
-			if (CurrentPosition.Equals(FinalPosition, 1.0f))
-			{
-				DoorState = EDoorState::OPEN;
-				CurrentTime = 0.0f;
-			}
-
-			if (DoorState == EDoorState::OPEN)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::OpeningDoor - Door slid open"));
-			}
-
-			break;
-		}
 		}
 	}
 }
@@ -126,42 +126,42 @@ void UDoorInteraction_Comp::ClosingDoor(float DeltaTime)
 
 		switch (OpenStyle)
 		{
-		case EDoorOpenStyle::ROTATE:
-		{
-			const FRotator CurrentRotation = FMath::Lerp(FinalRotation, StartRotation, MovementAlpha);
-			GetOwner()->SetActorRotation(CurrentRotation);
-
-			if (CurrentRotation.Equals(StartRotation, 1.0f))
+			case EDoorOpenStyle::ROTATE:
 			{
-				DoorState = EDoorState::CLOSED;
-				CurrentTime = 0.0f;
-			}
+				const FRotator CurrentRotation = FMath::Lerp(FinalRotation, StartRotation, MovementAlpha);
+				GetOwner()->SetActorRotation(CurrentRotation);
 
-			if (DoorState == EDoorState::CLOSED)
+				if (CurrentRotation.Equals(StartRotation, 1.0f))
+				{
+					DoorState = EDoorState::CLOSED;
+					CurrentTime = 0.0f;
+				}
+
+				if (DoorState == EDoorState::CLOSED)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::ClosingDoor - Door rotated closed"));
+				}
+
+				break;
+			}
+			case EDoorOpenStyle::SLIDE:
 			{
-				UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::ClosingDoor - Door rotated closed"));
+				const FVector CurrentPosition = FMath::Lerp(FinalPosition, StartPosition, MovementAlpha);
+				GetOwner()->SetActorLocation(CurrentPosition);
+
+				if (CurrentPosition.Equals(StartPosition, 1.0f))
+				{
+					DoorState = EDoorState::CLOSED;
+					CurrentTime = 0.0f;
+				}
+
+				if (DoorState == EDoorState::CLOSED)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::ClosingDoor - Door slid closed"));
+				}
+
+				break;
 			}
-
-			break;
-		}
-		case EDoorOpenStyle::SLIDE:
-		{
-			const FVector CurrentPosition = FMath::Lerp(FinalPosition, StartPosition, MovementAlpha);
-			GetOwner()->SetActorLocation(CurrentPosition);
-
-			if (CurrentPosition.Equals(StartPosition, 1.0f))
-			{
-				DoorState = EDoorState::CLOSED;
-				CurrentTime = 0.0f;
-			}
-
-			if (DoorState == EDoorState::CLOSED)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::ClosingDoor - Door slid closed"));
-			}
-
-			break;
-		}
 		}
 	}
 }
@@ -209,45 +209,45 @@ void UDoorInteraction_Comp::TickComponent(float DeltaTime, ELevelTick TickType, 
 	{
 		switch (DoorState)
 		{
-		case EDoorState::CLOSING:
-		{
-			ClosingDoor(DeltaTime);
-
-			break;
-		}
-		case EDoorState::CLOSED:
-		{
-			break;
-		}
-		case EDoorState::OPENING:
-		{
-			OpeningDoor(DeltaTime);
-
-			break;
-		}
-		case EDoorState::OPEN:
-		{
-			if (bCloses)
+			case EDoorState::CLOSING:
 			{
-				DoorState = EDoorState::WAITING;
-			}
+				ClosingDoor(DeltaTime);
 
-			break;
-		}
-		case EDoorState::WAITING:
-		{
-			if ((CurrentTime < TimeUntilClose))
-			{
-				CurrentTime += DeltaTime;
+				break;
 			}
-			else
+			case EDoorState::CLOSED:
 			{
-				CurrentTime = 0.0f;
-				DoorState = EDoorState::CLOSING;
+				break;
 			}
+			case EDoorState::OPENING:
+			{
+				OpeningDoor(DeltaTime);
 
-			break;
-		}
+				break;
+			}
+			case EDoorState::OPEN:
+			{
+				if (bCloses)
+				{
+					DoorState = EDoorState::WAITING;
+				}
+
+				break;
+			}
+			case EDoorState::WAITING:
+			{
+				if ((CurrentTime < TimeUntilClose))
+				{
+					CurrentTime += DeltaTime;
+				}
+				else
+				{
+					CurrentTime = 0.0f;
+					DoorState = EDoorState::CLOSING;
+				}
+
+				break;
+			}
 		}
 	}
 }
