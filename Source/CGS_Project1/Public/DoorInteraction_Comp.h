@@ -29,6 +29,14 @@ public:
 private:
 	AActor* Owner = nullptr;
 
+	UFUNCTION()
+	void SetOpenDirection(UPrimitiveComponent* OverlappedComponent,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult);
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -64,6 +72,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "bUsesKey"))
 	AStaticMeshActor* KeyMesh = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	AStaticMeshActor* FrameMesh = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	FRuntimeFloatCurve OpenCurve;

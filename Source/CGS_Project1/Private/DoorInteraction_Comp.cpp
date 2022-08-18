@@ -7,6 +7,8 @@
 #include "GameFramework/PlayerController.h"
 #include "Engine/TriggerBox.h"
 #include "Engine/World.h"
+#include "DrawDebugHelpers.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values for this component's properties
 UDoorInteraction_Comp::UDoorInteraction_Comp()
@@ -18,6 +20,29 @@ UDoorInteraction_Comp::UDoorInteraction_Comp()
 	// ...
 }
 
+
+void UDoorInteraction_Comp::SetOpenDirection(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (FrameMesh && GetWorld() && GetWorld()->GetFirstLocalPlayerFromController())
+	{
+		APawn* PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
+
+		if (PlayerPawn)
+		{
+
+
+			if (FVector::DotProduct(FrameMesh->GetActorRightVector(), PlayerPawn->GetActorForwardVector()) >= 0)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::TickComponent - Player is facing door forward"));
+				FinalRotation *= -1;
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("DoorInteraction_Comp.cpp::TickComponent - Player is not facing doorforward"));
+			}
+		}
+	}
+}
 
 // Called when the game starts
 void UDoorInteraction_Comp::BeginPlay()
@@ -33,6 +58,12 @@ void UDoorInteraction_Comp::BeginPlay()
 
 		StartPosition = Owner->GetActorLocation();
 		FinalPosition = Owner->GetActorLocation() + DesiredOffset;
+	}
+
+	if (TriggerBox)
+	{
+		UBoxComponent* BoxComp = TriggerBox->FindComponentByClass<UBoxComponent>();
+		BoxComp->OnComponentBeginOverlap.AddDynamic(this, &UDoorInteraction_Comp::SetOpenDirection);
 	}
 
 	CurrentTime = 0.0f;
